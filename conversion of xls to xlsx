@@ -1,0 +1,39 @@
+import os
+from openpyxl import Workbook
+from openpyxl.utils.exceptions import InvalidFileException
+from openpyxl.reader.excel import load_workbook
+import xlrd
+
+# Set the directory where the Excel files are located
+directory = '/path/to/files'
+
+# Loop through each Excel file and convert to xlsx format
+for filename in os.listdir(directory):
+    if filename.endswith('.xls'):
+        try:
+            # Load the xls workbook using xlrd
+            xls_file = os.path.join(directory, filename)
+            xls_workbook = xlrd.open_workbook(xls_file)
+
+            # Create a new xlsx workbook using openpyxl
+            xlsx_filename = os.path.splitext(filename)[0] + '.xlsx'
+            xlsx_file = os.path.join(directory, xlsx_filename)
+            xlsx_workbook = Workbook()
+
+            # Loop through each sheet in the xls workbook and copy to the xlsx workbook
+            for sheet_name in xls_workbook.sheet_names():
+                xls_sheet = xls_workbook.sheet_by_name(sheet_name)
+                xlsx_sheet = xlsx_workbook.create_sheet(sheet_name)
+
+                # Copy each cell value and style from the xls sheet to the xlsx sheet
+                for row_index in range(xls_sheet.nrows):
+                    for col_index in range(xls_sheet.ncols):
+                        cell_value = xls_sheet.cell_value(row_index, col_index)
+                        xlsx_sheet.cell(row=row_index+1, column=col_index+1, value=cell_value)
+
+            # Save the xlsx workbook
+            xlsx_workbook.save(xlsx_file)
+            print(f"File {filename} converted to {xlsx_filename}")
+
+        except (InvalidFileException, xlrd.XLRDError):
+            print(f"Unable to convert file {filename}")
